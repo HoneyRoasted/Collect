@@ -1,11 +1,17 @@
 package honeyroasted.collect.equivalence;
 
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 public abstract class Equivalence<T> {
+
+    public static <T> Equivalence<T> instancing(Class<T> type, Equivalence<? extends T>... children) {
+        return new Instancing<>(type, Arrays.asList(children));
+    }
 
     public final boolean equals(Object left, Object right) {
         if (left == right) return true;
@@ -80,6 +86,41 @@ public abstract class Equivalence<T> {
             hash += hashCode(value);
         }
         return hash;
+    }
+
+    static class Instancing<T> extends Equivalence<T> {
+        private Class<T> type;
+        private Collection<Equivalence<? extends T>> children;
+
+        public Instancing(Class<T> parent, Collection<Equivalence<? extends T>> children) {
+            this.type = parent;
+            this.children = children;
+        }
+
+        @Override
+        protected boolean doEquals(T left, T right) {
+            for (Equivalence<? extends T> child : children) {
+                if (child.type().isInstance(left) && child.type().isInstance(right)) {
+                    return child.equals(left, right);
+                }
+            }
+            return false;
+        }
+
+        @Override
+        protected int doHashCode(T val) {
+            for (Equivalence<? extends T> child : children) {
+                if (child.type().isInstance(val)) {
+                    return child.hashCode(val);
+                }
+            }
+            return 0;
+        }
+
+        @Override
+        protected Class<T> type() {
+            return this.type;
+        }
     }
 
     static class Wrapper<T> {
