@@ -2,13 +2,27 @@ package honeyroasted.collect.equivalence;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class Equivalence<T> {
 
-    protected abstract boolean equals(T left, T right);
+    public boolean equals(Object left, Object right) {
+        if (left == right) return true;
+        if (left == null || right == null) return false;
+        if (!type().isInstance(left) || !type().isInstance(right)) return Objects.equals(left, right);
+        return doEquals((T) left, (T) right);
+    }
 
-    protected abstract int hashCode(T val);
+    public int hashCode(Object value) {
+        if (value == null) return 0;
+        if (!type().isInstance(value)) return Objects.hashCode(value);
+        return doHashCode((T) value);
+    }
+
+    protected abstract boolean doEquals(T left, T right);
+
+    protected abstract int doHashCode(T val);
 
     protected Class<T> type() {
         return (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
@@ -32,6 +46,14 @@ public abstract class Equivalence<T> {
         return true;
     }
 
+    public int listHash(List<T> list) {
+        int hash = 1;
+        for (T value : list) {
+            hash = hash * 31 + hashCode(value);
+        }
+        return hash;
+    }
+
     public boolean setEquals(Set<T> left, Set<T> right) {
         if (left == right) return true;
         if (left == null || right == null) return false;
@@ -50,6 +72,14 @@ public abstract class Equivalence<T> {
         }
 
         return true;
+    }
+
+    public int setHash(Set<T> set) {
+        int hash = 0;
+        for (T value : set) {
+            hash += hashCode(value);
+        }
+        return hash;
     }
 
     static class Wrapper<T> {
