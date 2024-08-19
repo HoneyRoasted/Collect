@@ -7,14 +7,14 @@ import java.util.Set;
 
 public abstract class Equivalence<T> {
 
-    public boolean equals(Object left, Object right) {
+    public final boolean equals(Object left, Object right) {
         if (left == right) return true;
         if (left == null || right == null) return false;
         if (!type().isInstance(left) || !type().isInstance(right)) return Objects.equals(left, right);
         return doEquals((T) left, (T) right);
     }
 
-    public int hashCode(Object value) {
+    public final int hashCode(Object value) {
         if (value == null) return 0;
         if (!type().isInstance(value)) return Objects.hashCode(value);
         return doHashCode((T) value);
