@@ -60,6 +60,28 @@ public abstract class Equivalence<T> {
         return hash;
     }
 
+    public boolean arrayEquals(T[] left, T[] right) {
+        if (left == right) return true;
+        if (left == null || right == null) return false;
+        if (left.length != right.length) return false;
+
+        for (int i = 0; i < left.length; i++) {
+            if (!equals(left[i], right[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public int arrayHash(T[] list) {
+        int hash = 1;
+        for (T value : list) {
+            hash = hash * 31 + hashCode(value);
+        }
+        return hash;
+    }
+
     public boolean setEquals(Set<T> left, Set<T> right) {
         if (left == right) return true;
         if (left == null || right == null) return false;
