@@ -13,6 +13,10 @@ public abstract class Equivalence<T> {
         return new Instancing<>(type, Arrays.asList(children));
     }
 
+    public static <T> Equivalence<T> identity() {
+        return new Equivalence.Identity<>();
+    }
+
     public final boolean equals(Object left, Object right) {
         if (left == right) return true;
         if (left == null || right == null) return false;
@@ -110,6 +114,18 @@ public abstract class Equivalence<T> {
         return hash;
     }
 
+    static class Identity<T> extends Equivalence<T> {
+        @Override
+        protected boolean doEquals(T left, T right) {
+            return left == right;
+        }
+
+        @Override
+        protected int doHashCode(T val) {
+            return System.identityHashCode(val);
+        }
+    }
+
     static class Instancing<T> extends Equivalence<T> {
         private Class<T> type;
         private Collection<Equivalence<? extends T>> children;
@@ -164,7 +180,7 @@ public abstract class Equivalence<T> {
             if (o == null || getClass() != o.getClass()) return false;
             Wrapper wrapper = (Wrapper) o;
             if (!equivalence.type().isInstance(wrapper.value)) return false;
-            return equivalence.equals(value, (T) wrapper.value);
+            return equivalence.equals(value, wrapper.value);
         }
 
         @Override
