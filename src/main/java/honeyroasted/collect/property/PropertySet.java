@@ -88,4 +88,22 @@ public class PropertySet implements Copyable<PropertySet, Object[]> {
         });
         return copy;
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        PropertySet that = (PropertySet) object;
+        return Objects.equals(properties, that.properties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(properties);
+    }
+
+    @Override
+    public String toString() {
+        return "PropertySet{" + properties + '}';
+    }
 }
