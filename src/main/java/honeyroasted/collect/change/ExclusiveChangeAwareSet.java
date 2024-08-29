@@ -229,21 +229,23 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
 
     public void doChange(T element, BooleanSupplier operation) {
         Object[] local = this.table;
+        int index = index(element, local.length);
 
-        for (int i = index(element, local.length); i < local.length; i++) {
+        for (int i = index; i < local.length; i++) {
             T curr = (T) local[i];
             if (curr == null) { //We don't have it
                 operation.getAsBoolean();
                 return;
             } else if (element == curr) { //We do have it
-                remove(element); //Remove it for now
                 if (operation.getAsBoolean()) {
                     //It did change
+                    local[i] = null;
+                    shift(index, i);
                     insert(element, true);
                     this.modify();
                 } else {
-                    //It didn't change
-                    insert(element, false);
+                    //It didn't change (in terms of equality, may still have metadata changes)
+                    this.modify();
                 }
                 return;
             }
@@ -262,6 +264,26 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             } else if (Objects.equals(value, curr)) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    private boolean shift(int index, int foundAt) {
+        Object[] local = this.table;
+        if (foundAt != -1 && foundAt != index) {
+            //Need to shift elements back
+
+            int cutoff = -1;
+            for (int i = foundAt + 1; i < local.length; i++) {
+                Object curr = local[i];
+                if (curr == null || index(curr, local.length) == i) {
+                    cutoff = i;
+                    break;
+                }
+            }
+
+            System.arraycopy(table, foundAt + 1, table, foundAt, cutoff - foundAt);
+            return true;
         }
         return false;
     }
@@ -285,22 +307,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             }
         }
 
-        if (foundAt != -1 && foundAt != index) {
-            //Need to shift elements back
-
-            int cutoff = -1;
-            for (int i = foundAt + 1; i < local.length; i++) {
-                Object curr = local[i];
-                if (curr == null || index(curr, local.length) == i) {
-                    cutoff = i;
-                    break;
-                }
-            }
-
-            System.arraycopy(table, foundAt + 1, table, foundAt, cutoff - foundAt);
-            return true;
-        }
-        return false;
+        return shift(index, foundAt);
     }
 
     private boolean insert(T branch, boolean trackDiverge) {
