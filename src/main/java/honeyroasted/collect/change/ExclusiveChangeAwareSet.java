@@ -288,8 +288,10 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
                 }
             }
 
-            System.arraycopy(table, foundAt + 1, table, foundAt, cutoff - foundAt);
-            return true;
+            if (cutoff != -1) {
+                System.arraycopy(table, foundAt + 1, table, foundAt, cutoff - foundAt);
+                return true;
+            }
         }
         return false;
     }
