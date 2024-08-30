@@ -371,9 +371,8 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        ExclusiveChangeAwareSet<?> that = (ExclusiveChangeAwareSet<?>) object;
-        return containsAll(that) && this.size == that.size;
+        if (!(object instanceof Set<?> that)) return false;
+        return containsAll(that) && this.size == that.size();
     }
 
     @Override
