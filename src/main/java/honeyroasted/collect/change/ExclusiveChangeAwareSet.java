@@ -33,18 +33,14 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         this(256);
     }
 
-    private StopOnModifyIterator stoppingIterator() {
+    public StopOnModifyIterator stopOnModifyIterator() {
         StopOnModifyIterator iterator = new StopOnModifyIterator();
         this.linkedIterators.add(iterator);
         return iterator;
     }
 
-    public Iterator<T> stopOnModifyIterator() {
-        return this.stoppingIterator();
-    }
-
     public Stream<T> stopOnModifyStream() {
-        StopOnModifyIterator iterator = this.stoppingIterator();
+        StopOnModifyIterator iterator = this.stopOnModifyIterator();
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL & Spliterator.DISTINCT), false)
                 .onClose(() -> linkedIterators.remove(iterator));
     }
@@ -66,7 +62,12 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     }
 
     private void divergeAt(int index, boolean removal) {
-        this.linkedIterators.forEach(iter -> iter.notifyDiverge(index, removal));
+        Iterator<StopOnModifyIterator> iterIter = this.linkedIterators.iterator();
+        while (iterIter.hasNext()) {
+            StopOnModifyIterator iter = iterIter.next();
+            boolean shouldDrop = iter.notifyDiverge(index, removal);
+            if (shouldDrop) iterIter.remove();
+        }
         this.modCount++;
         this.modify();
     }
@@ -108,13 +109,18 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         private int currIndex = 0;
         private boolean diverged = false;
 
-        public void notifyDiverge(int index, boolean removal) {
+        public boolean notifyDiverge(int index, boolean removal) {
             if ((index < currIndex && removal) ||       //If an element was removed from stuff we already saw, OR
                     (index >= currIndex && !removal) || //an element was added in our future, OR
                     this.traversed >= size) {           //we no longer have room to iterate
                 this.diverged = true;
-                linkedIterators.remove(this);
+                return true;
             }
+            return false;
+        }
+
+        public boolean isDiverged() {
+            return this.diverged;
         }
 
         @Override
