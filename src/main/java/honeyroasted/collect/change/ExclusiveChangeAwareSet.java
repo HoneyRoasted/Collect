@@ -359,7 +359,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     }
 
     private static int index(int hash, int max) {
-        return hash % max;
+        return (hash >= 0 ? hash : -hash) % max;
     }
 
 }
