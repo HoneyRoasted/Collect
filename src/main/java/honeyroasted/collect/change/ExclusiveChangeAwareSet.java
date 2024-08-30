@@ -1,6 +1,7 @@
 package honeyroasted.collect.change;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
@@ -367,4 +368,20 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         return (hash >= 0 ? hash : -hash) % max;
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        ExclusiveChangeAwareSet<?> that = (ExclusiveChangeAwareSet<?>) object;
+        return containsAll(that) && this.size == that.size;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 0;
+        for (T val : this) {
+            result += Objects.hashCode(val);
+        }
+        return result;
+    }
 }
