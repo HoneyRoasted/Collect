@@ -249,9 +249,6 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
                     shift(index, i);
                     insert(element, true, false);
                     this.modify();
-                } else {
-                    //It didn't change (in terms of equality, may still have metadata changes)
-                    this.modify();
                 }
                 return;
             }
