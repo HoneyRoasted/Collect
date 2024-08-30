@@ -181,7 +181,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     }
 
     public boolean add(T value) {
-        return insert(value, true);
+        return insert(value, true, true);
     }
 
     @Override
@@ -247,7 +247,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
                     //It did change
                     local[i] = null;
                     shift(index, i);
-                    insert(element, true);
+                    insert(element, true, false);
                     this.modify();
                 } else {
                     //It didn't change (in terms of equality, may still have metadata changes)
@@ -318,12 +318,12 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         return shift(index, foundAt);
     }
 
-    private boolean insert(T branch, boolean trackDiverge) {
+    private boolean insert(T branch, boolean trackDiverge, boolean trackSize) {
         boolean success = insert(branch, this.table, index(branch, this.table.length), trackDiverge);
         if (!success) {
             expand(this.table.length * 2);
-            return insert(branch, true);
-        } else {
+            return insert(branch, trackDiverge, trackSize);
+        } else if (trackSize) {
             this.size++;
         }
         return success;
