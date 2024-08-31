@@ -312,7 +312,6 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     private boolean cull(Object value) {
         Object[] local = this.table;
 
-        int index = index(value, local.length);
         int foundAt = -1;
 
         for (int i = index(value, local.length); i < local.length; i++) {
@@ -332,22 +331,21 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     }
 
     private boolean insert(T branch, boolean trackDiverge, boolean trackSize) {
-        boolean success = insert(branch, this.table, index(branch, this.table.length), trackDiverge);
+        boolean success = insert(branch, this.table, index(branch, this.table.length), trackDiverge, trackSize);
         if (!success) {
             expand(this.table.length * 2);
             return insert(branch, trackDiverge, trackSize);
-        } else if (trackSize) {
-            this.size++;
         }
         return success;
     }
 
-    private boolean insert(T branch, Object[] table, int index, boolean trackDiverge) {
+    private boolean insert(T branch, Object[] table, int index, boolean trackDiverge, boolean trackSize) {
         int i = index;
         for (; i < table.length; i++) {
             T curr = (T) table[i];
             if (curr == null) {
                 if (trackDiverge) this.divergeAt(i, true);
+                if (trackSize) size++;
                 table[i] = branch;
                 return true;
             } else if (Objects.equals(branch, curr)) {
@@ -364,7 +362,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             for (int i = 0; i < this.table.length; i++) {
                 T value = (T) this.table[i];
                 if (value != null) {
-                    boolean success = insert(value, newTable, index(value, newTable.length), false);
+                    boolean success = insert(value, newTable, index(value, newTable.length), false, false);
                     if (!success) {
                         expand(size * 2);
                         return;
