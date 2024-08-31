@@ -1,7 +1,6 @@
 package honeyroasted.collect.change;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
@@ -100,6 +99,14 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             return null;
         }
 
+        @Override
+        public void remove() {
+            this.currIndex--;
+            table[currIndex] = null;
+            shift(currIndex);
+            divergeAt(currIndex, true);
+        }
+
         private void checkMod() {
             if (expectedModCount != modCount) throw new ConcurrentModificationException();
         }
@@ -111,8 +118,8 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         private boolean diverged = false;
 
         public boolean notifyDiverge(int index, boolean removal) {
-            if ((index < currIndex && removal) ||       //If an element was removed from stuff we already saw, OR
-                    (index >= currIndex && !removal) || //an element was added in our future, OR
+            if ((index <= currIndex && removal) ||       //If an element was removed from stuff we already saw, OR
+                    (index > currIndex && !removal) || //an element was added in our future, OR
                     this.traversed >= size) {           //we no longer have room to iterate
                 this.diverged = true;
                 return true;
@@ -143,6 +150,14 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
                 }
             }
             return null;
+        }
+
+        @Override
+        public void remove() {
+            this.currIndex--;
+            table[currIndex] = null;
+            shift(currIndex);
+            divergeAt(currIndex, true);
         }
     }
 
@@ -247,7 +262,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
                 if (operation.getAsBoolean()) {
                     //It did change
                     local[i] = null;
-                    shift(index, i);
+                    shift(i);
                     insert(element, true, false);
                     this.modify();
                 }
@@ -272,13 +287,13 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         return null;
     }
 
-    private boolean shift(int index, int foundAt) {
+    private boolean shift(int index) {
         Object[] local = this.table;
-        if (foundAt != -1 && foundAt != index) {
+        if (index != -1) {
             //Need to shift elements back
 
             int cutoff = -1;
-            for (int i = foundAt + 1; i < local.length; i++) {
+            for (int i = index + 1; i < local.length; i++) {
                 Object curr = local[i];
                 if (curr == null || index(curr, local.length) == i) {
                     cutoff = i;
@@ -287,7 +302,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             }
 
             if (cutoff != -1) {
-                System.arraycopy(table, foundAt + 1, table, foundAt, cutoff - foundAt);
+                System.arraycopy(table, index + 1, table, index, cutoff - index);
                 return true;
             }
         }
@@ -313,7 +328,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
             }
         }
 
-        return shift(index, foundAt);
+        return shift(foundAt);
     }
 
     private boolean insert(T branch, boolean trackDiverge, boolean trackSize) {
