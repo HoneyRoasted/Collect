@@ -158,7 +158,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
 
     @Override
     public boolean contains(Object o) {
-        return this.has(o);
+        return this.get(o) != null;
     }
 
     @Override
@@ -259,17 +259,17 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         operation.getAsBoolean();
     }
 
-    private boolean has(Object value) {
+    public <T> T get(T value) {
         Object[] local = this.table;
         for (int i = index(value, local.length); i < local.length; i++) {
             Object curr = local[i];
             if (curr == null) {
-                return false;
+                return null;
             } else if (Objects.equals(value, curr)) {
-                return true;
+                return (T) curr;
             }
         }
-        return false;
+        return null;
     }
 
     private boolean shift(int index, int foundAt) {
