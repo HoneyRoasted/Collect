@@ -312,22 +312,19 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     private boolean cull(Object value) {
         Object[] local = this.table;
 
-        int foundAt = -1;
-
         for (int i = index(value, local.length); i < local.length; i++) {
             Object curr = local[i];
             if (curr == null) {
                 return false;
             } else if (Objects.equals(value, curr)) {
-                foundAt = i;
                 local[i] = null;
                 this.size--;
                 this.divergeAt(i, true);
-                break;
+                shift(i);
+                return true;
             }
         }
-
-        return shift(foundAt);
+        return false;
     }
 
     private boolean insert(T branch, boolean trackDiverge, boolean trackSize) {
