@@ -33,6 +33,15 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         this(256);
     }
 
+    public Iterator<T> ignoreModifyIterator() {
+        return new FailFastIterator(false);
+    }
+
+    public Stream<T> ignoreModifyStream() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(ignoreModifyIterator(), 0), false);
+    }
+
+
     public StopOnModifyIterator stopOnModifyIterator() {
         StopOnModifyIterator iterator = new StopOnModifyIterator();
         this.linkedIterators.add(iterator);
@@ -75,7 +84,15 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
     public class FailFastIterator implements Iterator<T> {
         private int traversed = 0;
         private int currIndex = 0;
-        private int expectedModCount = modCount;
+        private int expectedModCount;
+
+        public FailFastIterator(boolean checkMods) {
+            if (checkMods) {
+                this.expectedModCount = modCount;
+            } else {
+                this.expectedModCount = -1;
+            }
+        }
 
         @Override
         public boolean hasNext() {
@@ -108,7 +125,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
         }
 
         private void checkMod() {
-            if (expectedModCount != modCount) throw new ConcurrentModificationException();
+            if (expectedModCount != -1 && expectedModCount != modCount) throw new ConcurrentModificationException();
         }
     }
 
@@ -178,7 +195,7 @@ public class ExclusiveChangeAwareSet<T extends ChangingMergingElement<T>> implem
 
     @Override
     public Iterator<T> iterator() {
-        return new FailFastIterator();
+        return new FailFastIterator(true);
     }
 
     @Override
