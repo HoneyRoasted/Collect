@@ -3,13 +3,14 @@ package honeyroasted.collect.property;
 import honeyroasted.collect.copy.Copyable;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PropertySet implements Copyable<PropertySet, Object[]> {
-    private Set<Object> properties = new HashSet<>();
+    private Set<Object> properties = new LinkedHashSet<>();
 
     public PropertySet attach(Object o) {
         Objects.requireNonNull(o);
