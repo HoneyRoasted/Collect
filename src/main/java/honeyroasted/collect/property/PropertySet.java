@@ -2,7 +2,6 @@ package honeyroasted.collect.property;
 
 import honeyroasted.collect.copy.Copyable;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +37,13 @@ public class PropertySet implements Copyable<PropertySet, Object[]> {
 
     public <T> T firstOr(Class<T> type, T failback) {
         return first(type).orElse(failback);
+    }
+
+    public <T> T firstOrAttach(Class<T> type, T failback) {
+        return first(type).orElseGet(() -> {
+            attach(failback);
+            return failback;
+        });
     }
 
     public boolean has(Class<?> type) {
